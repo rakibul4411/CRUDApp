@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card bg">
+            <div class="card-title p-1 bg-info text-white">Employee Entry</div>
+            <div class="card-body">
+                <div class="row mb-1">
+                    <div class="col-md-2">
+                        <label class="required">Empolyee Code</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input data-id="0" type="text" id="txtCode" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="required">Empolyee Name</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="txtName" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <label class="">Father Name</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="txtFathername" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="required">Adress</label>
+                    </div>
+                    <div class="col-md-4">
+                        <textarea type="text" id="txtAddress" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-1 offset-md-5">
+                        <input type="button" value="Save" id="btnSave" class="btn btn-success" />
+                    </div>
+                    <div class="col-md-1">
+                        <input type="button" value="Reset" id="btnReset" class="btn btn-warning" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-1">
+            <div class="card-title">Employee List</div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>
+                            Code
+                        </th>
+                        <th>
+                            Name
+                        </th>
+                        <th>
+                            Father Name
+                        </th>
+                        <th>
+                        Address
+                        </th>
+                        <th>Action</th>
+                    </tr>
+
+                    @foreach (var item in ViewBag.Employee)
+                    {
+                        <tr>
+                            <td>
+                                @item.EmployeeCode
+                            </td>
+                            <td>
+                                @item.Name
+                            </td>
+                            <td>
+                                @item.FatherName
+                            </td>
+                            <td>
+                                @item.Address
+                            </td>
+                            <td>
+                                <a href="javascript:void(0);" class="btnEdit" data-editempid="@item.Id">Edit</a> |
+                                <a href="javascript:void(0);" class="btnDelete" data-deleteempid="@item.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        function AllReSet() {
+            $("#txtCode").val('');
+            $("#txtName").val('');
+            $("#txtFathername").val('');
+            $("#txtAddress").val('');
+            $("#txtCode").attr("data-id", 0);
+            $("#btnSave").prop("value", "Save");
+        }
+        $("#btnReset").on("click", function () {
+            AllReSet();
+        });
+        $("#btnSave").on("click", function () {
+            var code = $("#txtCode").val().trim();
+            var name = $("#txtName").val().trim();
+            var father = $("#txtFathername").val().trim();
+            var address = $("#txtAddress").val().trim();
+            var id = parseInt($("#txtCode").attr("data-id"));
+
+
+            if (code == "") {
+                alert("Please enter employee code.");
+                return false;
+            }
+            if (name == "") {
+                alert("Please enter employee name.");
+                return false;
+            }
+            if (address == "") {
+                alert("Please enter address.");
+                return false;
+                }
+            var employee = { Id: id, Name: name, FatherName: father, EmployeeCode: code, Address: address };
+            $.ajax({
+                type: "Post",
+                url: '@Url.Action("Create", "Employee")',
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({ Employee: employee }),
+                dataType: "json",
+                success: function (data) {
+                    if (data.Status == true) {
+                        alert(data.Result.Message);
+                        window.location.reload();
+                    } else {
+                        alert(data.Result);
+                    }
+                },
+                failure: function () {
+                    alert("Failed!");
+                }
+            });
+
+        });
+        $(".btnEdit").on("click", function () {
+            var EmpId = $(this).attr("data-editempid");
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetAllEmployee", "Employee")',
+                contentType: "application/json; charset=utf-8",
+                data: { Id: EmpId },
+                dataType: "json",
+                success: function (data) {
+                    if (data.Status == true) {
+                        $("#txtCode").val(data.Result.EmployeeCode);
+                        $("#txtName").val(data.Result.Name);
+                        $("#txtFathername").val(data.Result.FatherName);
+                        $("#txtAddress").val(data.Result.Address);
+                        $("#txtCode").attr("data-id", data.Result.Id);
+                        $("#btnSave").prop("value", "Update");
+                        $("#txtCode").focus();
+                    } else {
+                        alert(data.Result);
+                    }
+                },
+                failure: function () {
+                    alert("Failed!");
+                }
+            });
+        });
+        $(".btnDelete").on("click", function () {
+            debugger
+            var EmpId = $(this).attr("data-deleteempid");
+            var employee = { Id: EmpId};
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("Delete", "Employee")',
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({ Employee: employee }),
+                dataType: "json",
+                success: function (data) {
+                    if (data.Status == true) {
+                        alert(data.Result.Message);
+                        window.location.reload();
+                    } else {
+                        alert(data.Result);
+                    }
+                },
+                failure: function () {
+                    alert("Failed!");
+                }
+            });
+    });
+    </script>
+}
